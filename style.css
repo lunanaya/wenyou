@@ -1,33 +1,64 @@
 /**
- * Wenyou System - Minimal Styles
+ * Wenyou System - Standard Tavern Integration Styles
  */
 
-/* 扩展设置中的样式 */
-.wenyou-settings {
-    padding: 10px;
+/* 扩展设置中的折叠面板样式 */
+.inline-drawer {
     border-bottom: 1px solid var(--borderColor);
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 
-.wenyou-settings button.success {
+.inline-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    background: rgba(0,0,0,0.1);
+}
+
+.inline-drawer-header:hover {
+    background: rgba(0,0,0,0.2);
+}
+
+.inline-drawer-content {
+    display: none;
+    padding: 15px;
+    background: rgba(0,0,0,0.05);
+}
+
+.inline-drawer-active .inline-drawer-content {
+    display: block;
+}
+
+.wenyou-settings-body p {
+    margin-bottom: 15px;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.wenyou-settings-body button.success {
     background-color: #28a745 !important;
     color: white !important;
 }
 
-/* 快捷菜单图标样式 */
-#wenyou-quick-icon {
+/* 快捷菜单图标样式 (魔法棒) */
+.quick_menu_button#wenyou-quick-icon {
     cursor: pointer;
-    padding: 5px;
-    font-size: 1.2em;
-    opacity: 0.8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 2px;
+    border-radius: 5px;
     transition: all 0.2s;
-    color: var(--mainColor);
 }
 
-#wenyou-quick-icon:hover {
-    opacity: 1;
-    transform: scale(1.1);
+.quick_menu_button#wenyou-quick-icon:hover {
+    background: var(--secondaryColor);
     color: #ffc107;
+    transform: scale(1.1);
 }
 
 /* 极简浮窗样式 */
@@ -40,10 +71,10 @@
     background: var(--mainColor);
     border: 1px solid var(--borderColor);
     border-radius: 12px;
-    z-index: 2000;
+    z-index: 3000; /* 确保在最上层 */
     display: none;
     flex-direction: column;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     overflow: hidden;
 }
 
@@ -55,6 +86,7 @@
     cursor: move;
     opacity: 0.3;
     font-size: 12px;
+    z-index: 11;
 }
 
 #wenyou-panel-close {
@@ -64,7 +96,7 @@
     cursor: pointer;
     opacity: 0.5;
     font-size: 16px;
-    z-index: 10;
+    z-index: 12;
 }
 
 #wenyou-panel-close:hover {

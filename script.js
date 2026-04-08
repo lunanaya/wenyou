@@ -1,26 +1,42 @@
 /**
  * SillyTavern Extension Script (Client-side)
- * Wenyou System - Deep Integration
+ * Wenyou System - Standard Integration
  */
 
 (function() {
     const extensionName = "wenyou";
     let isEnabled = false;
 
-    // 1. 在“三个小方块”（扩展设置）中添加菜单
+    // 1. 使用酒馆标准折叠面板结构 (inline-drawer)
     function setupSettings() {
         const html = `
-            <div class="wenyou-settings">
-                <h4>文游系统 (Wenyou)</h4>
-                <p>身份驱动的故事逻辑生成器</p>
-                <div class="flex-container">
-                    <button id="wenyou-toggle-btn" class="menu_button">点击启用文游系统</button>
+            <div id="wenyou-settings-wrapper" class="inline-drawer">
+                <div class="inline-drawer-header">
+                    <b>文游系统 (Wenyou)</b>
+                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
+                </div>
+                <div class="inline-drawer-content">
+                    <div class="wenyou-settings-body">
+                        <p>身份驱动的故事逻辑生成器，专为深度文游设计。</p>
+                        <div class="flex-container">
+                            <button id="wenyou-toggle-btn" class="menu_button">点击启用文游系统</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
         $('#extensions_settings').append(html);
 
-        $('#wenyou-toggle-btn').on('click', function() {
+        // 处理酒馆自带的折叠逻辑
+        $('#wenyou-settings-wrapper .inline-drawer-header').on('click', function() {
+            const drawer = $(this).closest('.inline-drawer');
+            drawer.toggleClass('inline-drawer-active');
+            const icon = $(this).find('.inline-drawer-icon');
+            icon.toggleClass('fa-circle-chevron-down fa-circle-chevron-up');
+        });
+
+        $('#wenyou-toggle-btn').on('click', function(e) {
+            e.stopPropagation(); // 防止触发折叠
             isEnabled = !isEnabled;
             if (isEnabled) {
                 $(this).text('系统已启用').addClass('success');
@@ -33,20 +49,21 @@
         });
     }
 
-    // 2. 在“魔法棒”（快捷菜单）中添加图标
+    // 2. 修正魔法棒（快捷菜单）图标位置
     function addQuickMenuIcon() {
         if ($('#wenyou-quick-icon').length) return;
 
+        // 酒馆快捷菜单的标准图标结构
         const iconHtml = `
-            <div id="wenyou-quick-icon" class="fa-solid fa-wand-magic-sparkles" title="开启文游织梦"></div>
+            <div id="wenyou-quick-icon" class="fa-solid fa-wand-magic-sparkles quick_menu_button" title="开启文游织梦"></div>
         `;
         
-        // 尝试添加到快捷菜单栏 (Quick Menu)
+        // 优先寻找魔法棒快捷菜单栏
         const quickMenu = $('#quick_menu');
         if (quickMenu.length) {
             quickMenu.append(iconHtml);
         } else {
-            // 如果找不到快捷菜单，添加到侧边栏作为备选
+            // 备选方案：添加到侧边扩展栏
             $('#extensions_menu').append(iconHtml);
         }
 
