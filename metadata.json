@@ -1,0 +1,5 @@
+{
+  "name": "Tavern Story Weaver",
+  "description": "A text-based adventure companion that generates dynamic story options based on context, with configurable API endpoints for different narrative modes.",
+  "requestFramePermissions": []
+}
