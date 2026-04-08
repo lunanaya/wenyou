@@ -67,7 +67,7 @@ export default function App() {
             <div className="bg-amber-600 p-1 rounded-lg">
               <BrainCircuit className="h-4 w-4 text-white" />
             </div>
-            <h1 className="text-sm font-bold tracking-tight text-amber-900">Tavern Weaver</h1>
+            <h1 className="text-sm font-bold tracking-tight text-amber-900">文游系统</h1>
           </div>
           <div className="flex items-center gap-1">
             <div className={cn(
