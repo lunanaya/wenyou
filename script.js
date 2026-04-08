@@ -46,107 +46,6 @@
         }
     }
 
-    // --- UI 构建 ---
-    function createModal() {
-        if ($('#wenyou-modal-container').length) return;
-
-        const modalHtml = `
-            <div id="wenyou-modal-container">
-                <div id="wenyou-modal">
-                    <div class="wenyou-header">
-                        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> 文游系统 (Wenyou)</h2>
-                        <div class="wenyou-close"><i class="fa-solid fa-xmark"></i></div>
-                    </div>
-                    <div class="wenyou-content">
-                        <div class="wenyou-tabs">
-                            <div class="wenyou-tab active" data-tab="generate">生成</div>
-                            <div class="wenyou-tab" data-tab="settings">设置</div>
-                        </div>
-
-                        <!-- 生成面板 -->
-                        <div id="wenyou-tab-generate" class="wenyou-section active">
-                            <div class="wenyou-input-group">
-                                <label>意图引导 (可选)</label>
-                                <input type="text" id="wenyou-purpose" placeholder="例如：寻找破局线索 / 搞钱 / 调查某事">
-                            </div>
-                            <div class="wenyou-btn-grid">
-                                <button class="wenyou-btn primary" data-mode="user_plan">
-                                    <i class="fa-solid fa-person-walking"></i> 生成个人计划
-                                </button>
-                                <button class="wenyou-btn" data-mode="side_quest">
-                                    <i class="fa-solid fa-route"></i> 生成支线触发
-                                </button>
-                                <button class="wenyou-btn" data-mode="main_story">
-                                    <i class="fa-solid fa-scroll"></i> 生成主线推进
-                                </button>
-                            </div>
-                            <div id="wenyou-results" class="wenyou-results">
-                                <!-- 结果卡片将插入此处 -->
-                            </div>
-                        </div>
-
-                        <!-- 设置面板 -->
-                        <div id="wenyou-tab-settings" class="wenyou-section">
-                            <div class="wenyou-input-group">
-                                <label>Gemini API Key</label>
-                                <input type="password" id="wenyou-api-key" placeholder="输入您的 API Key">
-                            </div>
-                            <div class="wenyou-input-group">
-                                <label>模型选择</label>
-                                <select id="wenyou-model">
-                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (推荐: 快且免费)</option>
-                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (更强但慢)</option>
-                                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
-                                </select>
-                            </div>
-                            <button id="wenyou-save-settings" class="wenyou-btn primary" style="width:100%">保存设置</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        $('body').append(modalHtml);
-
-        // 事件绑定
-        $('.wenyou-close').on('click', hideModal);
-        $('#wenyou-modal-container').on('click', function(e) {
-            if (e.target === this) hideModal();
-        });
-
-        $('.wenyou-tab').on('click', function() {
-            const tab = $(this).data('tab');
-            $('.wenyou-tab').removeClass('active');
-            $(this).addClass('active');
-            $('.wenyou-section').removeClass('active');
-            $(`#wenyou-tab-${tab}`).addClass('active');
-        });
-
-        $('.wenyou-btn[data-mode]').on('click', function() {
-            const mode = $(this).data('mode');
-            handleGenerate(mode);
-        });
-
-        $('#wenyou-save-settings').on('click', function() {
-            settings.apiKey = $('#wenyou-api-key').val();
-            settings.model = $('#wenyou-model').val();
-            saveSettings();
-            toastr.success('设置已保存');
-        });
-    }
-
-    function showModal() {
-        createModal();
-        loadSettings();
-        $('#wenyou-api-key').val(settings.apiKey);
-        $('#wenyou-model').val(settings.model);
-        $('#wenyou-modal-container').css('display', 'flex');
-    }
-
-    function hideModal() {
-        $('#wenyou-modal-container').hide();
-    }
-
     // --- 核心逻辑 ---
     async function handleGenerate(mode) {
         if (isGenerating) return;
@@ -296,21 +195,103 @@ ${template}
     }
 
     // --- 插件初始化 ---
-    function init() {
-        loadSettings();
-        
-        // 添加到小魔法棒菜单 (Extensions Menu)
-        const iconHtml = `
-            <div id="wenyou-menu-button" class="list-group-item flex-container flex-align-center" title="文游系统">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                <div class="extension_menu_text">文游系统</div>
+    function setupSettings() {
+        if ($('#wenyou-settings-wrapper').length) return;
+
+        const html = `
+            <div id="wenyou-settings-wrapper" class="inline-drawer">
+                <div class="inline-drawer-header">
+                    <b><i class="fa-solid fa-wand-magic-sparkles"></i> 文游系统 (Wenyou)</b>
+                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down"></div>
+                </div>
+                <div class="inline-drawer-content">
+                    <div class="wenyou-settings-body" style="padding:15px;">
+                        <div class="wenyou-tabs">
+                            <div class="wenyou-tab active" data-tab="generate">生成</div>
+                            <div class="wenyou-tab" data-tab="settings">设置</div>
+                        </div>
+
+                        <!-- 生成面板 -->
+                        <div id="wenyou-tab-generate" class="wenyou-section active">
+                            <div class="wenyou-input-group">
+                                <label>意图引导 (可选)</label>
+                                <input type="text" id="wenyou-purpose" placeholder="例如：寻找破局线索 / 搞钱 / 调查某事">
+                            </div>
+                            <div class="wenyou-btn-grid">
+                                <button class="wenyou-btn primary" data-mode="user_plan">
+                                    <i class="fa-solid fa-person-walking"></i> 生成个人计划
+                                </button>
+                                <button class="wenyou-btn" data-mode="side_quest">
+                                    <i class="fa-solid fa-route"></i> 生成支线触发
+                                </button>
+                                <button class="wenyou-btn" data-mode="main_story">
+                                    <i class="fa-solid fa-scroll"></i> 生成主线推进
+                                </button>
+                            </div>
+                            <div id="wenyou-results" class="wenyou-results">
+                                <!-- 结果卡片将插入此处 -->
+                            </div>
+                        </div>
+
+                        <!-- 设置面板 -->
+                        <div id="wenyou-tab-settings" class="wenyou-section">
+                            <div class="wenyou-input-group">
+                                <label>Gemini API Key</label>
+                                <input type="password" id="wenyou-api-key" placeholder="输入您的 API Key">
+                            </div>
+                            <div class="wenyou-input-group">
+                                <label>模型选择</label>
+                                <select id="wenyou-model">
+                                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (推荐: 快且免费)</option>
+                                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (更强但慢)</option>
+                                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash Exp</option>
+                                </select>
+                            </div>
+                            <button id="wenyou-save-settings" class="wenyou-btn primary" style="width:100%">保存设置</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
-        $('#extensions_menu').append(iconHtml);
-        $('#wenyou-menu-button').on('click', showModal);
+        $('#extensions_settings').append(html);
 
-        console.log('文游系统 (Wenyou) 已加载至小魔法棒菜单');
+        // 事件绑定
+        $('.wenyou-tab').on('click', function() {
+            const tab = $(this).data('tab');
+            $('.wenyou-tab').removeClass('active');
+            $(this).addClass('active');
+            $('.wenyou-section').removeClass('active');
+            $(`#wenyou-tab-${tab}`).addClass('active');
+        });
+
+        $('.wenyou-btn[data-mode]').on('click', function() {
+            const mode = $(this).data('mode');
+            handleGenerate(mode);
+        });
+
+        $('#wenyou-save-settings').on('click', function() {
+            settings.apiKey = $('#wenyou-api-key').val();
+            settings.model = $('#wenyou-model').val();
+            saveSettings();
+            toastr.success('设置已保存');
+        });
+
+        // 处理酒馆自带的折叠逻辑
+        $('#wenyou-settings-wrapper .inline-drawer-header').on('click', function() {
+            const drawer = $(this).closest('.inline-drawer');
+            drawer.toggleClass('inline-drawer-active');
+            const icon = $(this).find('.inline-drawer-icon');
+            icon.toggleClass('fa-circle-chevron-down fa-circle-chevron-up');
+        });
+        
+        // 初始化设置值
+        $('#wenyou-api-key').val(settings.apiKey);
+        $('#wenyou-model').val(settings.model);
     }
 
-    $(document).ready(init);
+    $(document).ready(() => {
+        loadSettings();
+        setupSettings();
+        console.log('文游系统 (Wenyou) 已加载至扩展设置');
+    });
 })();
