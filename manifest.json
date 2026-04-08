@@ -1,8 +1,8 @@
 {
-    "name": "wenyou",
-    "display_name": "AI Story Weaver (Wenyou)",
+    "name": "wenyou-system",
+    "display_name": "文游系统",
     "description": "一个强大的故事织梦工具，专为身份驱动的逻辑生成而优化。",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "author": "AI Studio",
     "entry_point": "index.js",
     "js": ["script.js"],

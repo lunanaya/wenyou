@@ -6,7 +6,7 @@
 import { extension_settings, getContext } from '../../../extensions.js';
 import { registerSlashCommand } from '../../../slash-commands.js';
 
-const extensionName = "wenyou";
+const extensionName = "wenyou-system";
 const extensionFolderPath = `extensions/${extensionName}/`;
 
 function loadExtension() {
@@ -14,7 +14,7 @@ function loadExtension() {
     const sidebarButton = document.createElement('div');
     sidebarButton.id = 'wenyou-sidebar-button';
     sidebarButton.className = 'menu_button fa-solid fa-wand-magic-sparkles';
-    sidebarButton.title = 'AI Story Weaver (Wenyou)';
+    sidebarButton.title = '文游系统';
     
     // Add to ST extensions list
     const extensionsMenu = document.getElementById('extensions_menu');
@@ -25,6 +25,9 @@ function loadExtension() {
     sidebarButton.addEventListener('click', () => {
         openWenyouPanel();
     });
+
+    // Register slash command
+    registerSlashCommand("wenyou", () => openWenyouPanel(), [], "打开文游系统面板", true);
 }
 
 function openWenyouPanel() {
@@ -38,7 +41,7 @@ function openWenyouPanel() {
     const panelHtml = `
         <div id="wenyou-panel" class="draggable-panel">
             <div id="wenyou-panel-header" class="draggable-panel-header">
-                <span>AI Story Weaver</span>
+                <span>文游系统</span>
                 <div id="wenyou-panel-close" class="fa-solid fa-xmark"></div>
             </div>
             <div id="wenyou-panel-content">
