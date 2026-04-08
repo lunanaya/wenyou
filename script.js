@@ -20,8 +20,8 @@
             }
         }
         
-        // 指向插件根目录中的 index.html
-        const iframeSrc = extensionBase + 'index.html';
+        // 指向编译后的 dist 目录中的 index.html
+        const iframeSrc = extensionBase + 'dist/index.html';
 
         const html = `
             <div id="wenyou-settings-wrapper" class="inline-drawer">
