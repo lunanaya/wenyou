@@ -1,18 +1,14 @@
 /**
  * SillyTavern Extension Script (Client-side)
- * Wenyou System - Embedded Integration
+ * Wenyou System - Native Integration
  */
 
 (function() {
-    const extensionName = "wenyou";
-
     // 1. 使用酒馆标准折叠面板结构 (inline-drawer)
     function setupSettings() {
-        // 尝试获取插件的基础路径
-        let extensionBase = '/extensions/wenyou/';
-        
-        // 动态检测路径（兼容不同部署方式）
+        // 动态检测路径
         const scripts = document.getElementsByTagName('script');
+        let extensionBase = '/extensions/wenyou/';
         for (let i = 0; i < scripts.length; i++) {
             if (scripts[i].src.includes('wenyou/script.js')) {
                 extensionBase = scripts[i].src.replace('script.js', '');
@@ -20,8 +16,8 @@
             }
         }
         
-        // 指向编译后的 dist 目录中的 index.html
-        const iframeSrc = extensionBase + 'dist/index.html';
+        // 直接指向根目录的 index.html
+        const iframeSrc = extensionBase + 'index.html';
 
         const html = `
             <div id="wenyou-settings-wrapper" class="inline-drawer">
