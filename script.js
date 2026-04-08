@@ -1,126 +1,90 @@
 /**
  * SillyTavern Extension Script (Client-side)
- * This script runs in the user's browser within the SillyTavern UI.
+ * Wenyou System - Deep Integration
  */
 
-import { extension_settings, getContext } from '../../../extensions.js';
-import { registerSlashCommand } from '../../../slash-commands.js';
+(function() {
+    const extensionName = "wenyou";
+    let isEnabled = false;
 
-const extensionName = "wenyou-system";
-const extensionFolderPath = `extensions/${extensionName}/`;
-const defaultSettings = {
-    isEnabled: false,
-};
-
-function loadSettings() {
-    if (!extension_settings[extensionName]) {
-        extension_settings[extensionName] = defaultSettings;
-    }
-}
-
-function onSettingsClick() {
-    const settingsHtml = `
-        <div class="wenyou-settings">
-            <div class="inline-drawer">
-                <div class="inline-drawer-header">
-                    <b>文游系统设置</b>
-                </div>
-                <div class="inline-drawer-content" style="padding: 10px;">
-                    <div class="flex-container">
-                        <label for="wenyou-enabled">启用文游系统 (魔法棒按钮)</label>
-                        <input type="checkbox" id="wenyou-enabled" ${extension_settings[extensionName].isEnabled ? 'checked' : ''}>
-                    </div>
-                    <p style="font-size: 0.8em; opacity: 0.8; margin-top: 10px;">
-                        启用后，魔法棒（生成按钮）中会出现文游系统选项。
-                    </p>
+    // 1. 在“三个小方块”（扩展设置）中添加菜单
+    function setupSettings() {
+        const html = `
+            <div class="wenyou-settings">
+                <h4>文游系统 (Wenyou)</h4>
+                <p>身份驱动的故事逻辑生成器</p>
+                <div class="flex-container">
+                    <button id="wenyou-toggle-btn" class="menu_button">点击启用文游系统</button>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+        $('#extensions_settings').append(html);
 
-    $('#extension_settings_wenyou').remove();
-    const settingsElement = $(settingsHtml);
-    settingsElement.attr('id', 'extension_settings_wenyou');
-    $('#extensions_settings').append(settingsElement);
+        $('#wenyou-toggle-btn').on('click', function() {
+            isEnabled = !isEnabled;
+            if (isEnabled) {
+                $(this).text('系统已启用').addClass('success');
+                addQuickMenuIcon();
+            } else {
+                $(this).text('点击启用文游系统').removeClass('success');
+                removeQuickMenuIcon();
+                $('#wenyou-floating-panel').hide();
+            }
+        });
+    }
 
-    $('#wenyou-enabled').on('change', function() {
-        extension_settings[extensionName].isEnabled = !!$(this).prop('checked');
-        saveSettingsDebounced();
-        updateWandButton();
-    });
-}
+    // 2. 在“魔法棒”（快捷菜单）中添加图标
+    function addQuickMenuIcon() {
+        if ($('#wenyou-quick-icon').length) return;
 
-function updateWandButton() {
-    const isEnabled = extension_settings[extensionName].isEnabled;
-    let wandButton = document.getElementById('wenyou-wand-button');
+        const iconHtml = `
+            <div id="wenyou-quick-icon" class="fa-solid fa-wand-magic-sparkles" title="开启文游织梦"></div>
+        `;
+        
+        // 尝试添加到快捷菜单栏 (Quick Menu)
+        const quickMenu = $('#quick_menu');
+        if (quickMenu.length) {
+            quickMenu.append(iconHtml);
+        } else {
+            // 如果找不到快捷菜单，添加到侧边栏作为备选
+            $('#extensions_menu').append(iconHtml);
+        }
 
-    if (isEnabled) {
-        if (!wandButton) {
-            wandButton = document.createElement('div');
-            wandButton.id = 'wenyou-wand-button';
-            wandButton.className = 'menu_button fa-solid fa-wand-magic-sparkles';
-            wandButton.title = '文游系统';
-            
-            // Add to the magic wand menu (usually where other generation tools are)
-            const extensionsMenu = document.getElementById('extensions_menu');
-            if (extensionsMenu) {
-                extensionsMenu.appendChild(wandButton);
+        $('#wenyou-quick-icon').on('click', function() {
+            toggleFloatingPanel();
+        });
+    }
+
+    function removeQuickMenuIcon() {
+        $('#wenyou-quick-icon').remove();
+    }
+
+    // 3. 极简浮窗逻辑
+    function toggleFloatingPanel() {
+        let panel = $('#wenyou-floating-panel');
+        if (panel.length === 0) {
+            const panelHtml = `
+                <div id="wenyou-floating-panel">
+                    <div id="wenyou-panel-drag" class="fa-solid fa-grip-lines"></div>
+                    <div id="wenyou-panel-close" class="fa-solid fa-circle-xmark"></div>
+                    <iframe id="wenyou-iframe" src="${window.location.origin}"></iframe>
+                </div>
+            `;
+            $('body').append(panelHtml);
+            panel = $('#wenyou-floating-panel');
+
+            // 拖拽功能
+            if (window.makeDraggable) {
+                window.makeDraggable(panel[0]);
             }
 
-            wandButton.addEventListener('click', () => {
-                openWenyouPanel();
-            });
+            $('#wenyou-panel-close').on('click', () => panel.hide());
         }
-    } else {
-        if (wandButton) {
-            wandButton.remove();
-        }
-    }
-}
 
-function openWenyouPanel() {
-    if (document.getElementById('wenyou-panel')) {
-        $('#wenyou-panel').toggle();
-        return;
+        panel.toggle();
     }
 
-    const panelHtml = `
-        <div id="wenyou-panel" class="draggable-panel">
-            <div id="wenyou-panel-header" class="draggable-panel-header">
-                <span>文游系统</span>
-                <div id="wenyou-panel-close" class="fa-solid fa-xmark"></div>
-            </div>
-            <div id="wenyou-panel-content">
-                <iframe id="wenyou-iframe" src="${window.location.origin}" style="width:100%; height:100%; border:none;"></iframe>
-            </div>
-        </div>
-    `;
-
-    $('body').append(panelHtml);
-    
-    $('#wenyou-panel-close').on('click', () => {
-        $('#wenyou-panel').hide();
+    $(document).ready(() => {
+        setupSettings();
     });
-
-    if (window.makeDraggable) {
-        window.makeDraggable(document.getElementById('wenyou-panel'));
-    }
-}
-
-$(document).ready(() => {
-    loadSettings();
-    updateWandButton();
-    
-    // Register in the three-dot/extensions menu
-    const extensionsMenu = document.getElementById('extensions_settings');
-    if (extensionsMenu) {
-        const menuHeader = document.createElement('div');
-        menuHeader.className = 'extensions-settings-header';
-        menuHeader.innerText = '文游系统';
-        menuHeader.addEventListener('click', onSettingsClick);
-        // This is a bit hacky, ST usually populates this automatically if manifest is right
-        // but we can force a registration call if needed.
-    }
-
-    registerSlashCommand("wenyou", () => openWenyouPanel(), [], "打开文游系统面板", true);
-});
+})();
