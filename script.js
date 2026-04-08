@@ -1,48 +1,50 @@
 /**
  * 文游系统 (Wenyou) - SillyTavern 插件
- * 纯 JavaScript 实现，集成在“小魔法棒”菜单中
+ * 修复版：适配真实的 SillyTavern API
  */
 
+// 使用自执行函数避免污染全局变量空间
 (function() {
     // --- 核心配置与状态 ---
     const extensionName = "wenyou-system";
-    const extensionPath = `/extensions/${extensionName}/`;
     
-    let settings = {
-        apiKey: '',
-        model: 'gemini-1.5-flash',
-        autoSync: true,
-        configs: {
-            user_plan: {
-                name: '个人计划',
-                promptTemplate: '基于当前上下文，为角色生成5个可能的下一步行动计划。目的：{{purpose}}。上下文：{{context}}',
-                isActive: true
-            },
-            side_quest: {
-                name: '支线触发',
-                promptTemplate: '基于当前上下文，生成5个可能触发的支线任务或突发事件。目的：{{purpose}}。上下文：{{context}}',
-                isActive: true
-            },
-            main_story: {
-                name: '主线推进',
-                promptTemplate: '基于当前上下文，生成5个推进主线剧情的关键转折点。目的：{{purpose}}。上下文：{{context}}',
-                isActive: true
+    // 初始化或读取酒馆的扩展设置
+    // extension_settings 是 SillyTavern 的全局变量
+    if (!extension_settings[extensionName]) {
+        extension_settings[extensionName] = {
+            apiKey: '',
+            model: 'gemini-1.5-flash',
+            autoSync: true,
+            configs: {
+                user_plan: {
+                    name: '个人计划',
+                    promptTemplate: '基于当前上下文，为角色生成5个可能的下一步行动计划。目的：{{purpose}}。上下文：{{context}}',
+                    isActive: true
+                },
+                side_quest: {
+                    name: '支线触发',
+                    promptTemplate: '基于当前上下文，生成5个可能触发的支线任务或突发事件。目的：{{purpose}}。上下文：{{context}}',
+                    isActive: true
+                },
+                main_story: {
+                    name: '主线推进',
+                    promptTemplate: '基于当前上下文，生成5个推进主线剧情的关键转折点。目的：{{purpose}}。上下文：{{context}}',
+                    isActive: true
+                }
             }
-        }
-    };
-
-    let currentOptions = [];
+        };
+    }
+    
+    // 引用全局设置以便调用
+    let settings = extension_settings[extensionName];
     let isGenerating = false;
 
     // --- 工具函数 ---
     function saveSettings() {
-        SillyTavern.Context.setExtensionSettings(extensionName, settings);
-    }
-
-    function loadSettings() {
-        const saved = SillyTavern.Context.getExtensionSettings(extensionName);
-        if (saved) {
-            settings = Object.assign(settings, saved);
+        // 同步修改到全局对象并调用酒馆自带的防抖保存函数
+        extension_settings[extensionName] = settings;
+        if (typeof saveSettingsDebounced === 'function') {
+            saveSettingsDebounced();
         }
     }
 
@@ -58,7 +60,7 @@
         const context = getChatContext();
         
         if (!context) {
-            toastr.warning('未检测到聊天上下文');
+            toastr.warning('未检测到聊天上下文，请先开始对话。');
             return;
         }
 
@@ -72,8 +74,8 @@
             
             renderResults(results, mode);
         } catch (error) {
-            console.error('Generation failed:', error);
-            toastr.error('生成失败，请检查网络或 API Key');
+            console.error('文游系统生成失败:', error);
+            toastr.error('生成失败，请检查网络环境或 API Key。详细信息看控制台。');
         } finally {
             isGenerating = false;
             updateLoadingState(false, mode);
@@ -81,11 +83,20 @@
     }
 
     function getChatContext() {
-        const context = SillyTavern.Context.getContext();
+        // 使用 SillyTavern 全局函数 getContext() 获取上下文
+        const context = typeof getContext === 'function' ? getContext() : null;
         if (!context || !context.chat || context.chat.length === 0) return null;
         
-        // 获取最后15条消息
-        return context.chat.slice(-15).map(m => `${m.name}: ${m.mes}`).join('\n');
+        // 获取最后15条消息，过滤掉系统提示词等非对话内容
+        const recentMessages = context.chat.slice(-15).filter(m => m.is_system !== true);
+        if (recentMessages.length === 0) return null;
+
+        // 格式化为 "角色名: 对话内容" 的纯文本形式
+        return recentMessages.map(m => {
+            // 将可能存在的 HTML 标签简单剔除，防止干扰 AI
+            const plainTextMes = m.mes.replace(/<[^>]*>?/gm, '');
+            return `${m.name}: ${plainTextMes}`;
+        }).join('\n');
     }
 
     function buildPrompt(context, config, purpose) {
@@ -105,7 +116,7 @@ ${template}
 - "title": 选项的简短标题
 - "description": 选项的详细剧情描述（100-200字）
 
-严格遵守 JSON 格式，不要输出任何解释性文字。
+严格遵守 JSON 格式，不要输出任何解释性文字或 Markdown 代码块标记（如 \`\`\`json ）。
         `.trim();
     }
 
@@ -130,7 +141,15 @@ ${template}
 
         const data = await response.json();
         const text = data.candidates[0].content.parts[0].text;
-        return JSON.parse(text);
+        
+        // 尝试解析 JSON（处理 AI 偶尔带上 Markdown 代码块的情况）
+        try {
+            const cleanText = text.replace(/^```json/im, '').replace(/```$/im, '').trim();
+            return JSON.parse(cleanText);
+        } catch (e) {
+            console.error("JSON 解析失败，返回的文本为:", text);
+            throw new Error("AI 返回的格式不正确，不是有效的 JSON");
+        }
     }
 
     function renderResults(results, mode) {
@@ -144,7 +163,7 @@ ${template}
                     <div class="wenyou-card-header">
                         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
                             <span class="wenyou-badge ${badgeClass}">${settings.configs[mode].name}</span>
-                            <b style="font-size:0.9em; truncate">${item.title}</b>
+                            <b style="font-size:0.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.title}</b>
                         </div>
                         <i class="fa-solid fa-chevron-down"></i>
                     </div>
@@ -152,7 +171,10 @@ ${template}
                         <div class="wenyou-text">${item.description}</div>
                         <div class="wenyou-card-actions">
                             <button class="wenyou-btn primary wenyou-copy-btn" style="flex:1; font-size:0.8em; padding:5px;">
-                                <i class="fa-solid fa-copy"></i> 复制并粘贴
+                                <i class="fa-solid fa-copy"></i> 复制并修改
+                            </button>
+                            <button class="wenyou-btn wenyou-send-btn" style="flex:1; font-size:0.8em; padding:5px; background: var(--greenColor);">
+                                <i class="fa-solid fa-paper-plane"></i> 发送
                             </button>
                             <button class="wenyou-btn wenyou-remove-btn" style="padding:5px 10px;">
                                 <i class="fa-solid fa-trash"></i>
@@ -165,18 +187,29 @@ ${template}
         });
 
         // 绑定卡片事件
-        $('.wenyou-card-header').on('click', function() {
+        $('.wenyou-card-header').off('click').on('click', function() {
             $(this).parent().toggleClass('active');
             $(this).find('i').toggleClass('fa-chevron-down fa-chevron-up');
         });
 
-        $('.wenyou-copy-btn').on('click', function() {
+        // 复制到输入框的事件
+        $('.wenyou-copy-btn').off('click').on('click', function() {
             const text = $(this).closest('.wenyou-card').find('.wenyou-text').text();
-            navigator.clipboard.writeText(text);
-            toastr.success('已复制到剪贴板，请手动粘贴至输入框');
+            // 获取酒馆底部的输入框并填入内容
+            $('#send_textarea').val($('#send_textarea').val() + text).trigger('input');
+            toastr.success('已填入输入框，您可以进一步修改。');
         });
 
-        $('.wenyou-remove-btn').on('click', function() {
+        // 直接作为用户消息发送的事件
+        $('.wenyou-send-btn').off('click').on('click', function() {
+            const text = $(this).closest('.wenyou-card').find('.wenyou-text').text();
+            // 调用酒馆的发送消息逻辑
+            $('#send_textarea').val(text).trigger('input');
+            $('#send_but').click();
+            toastr.success('已发送剧情选项！');
+        });
+
+        $('.wenyou-remove-btn').off('click').on('click', function() {
             $(this).closest('.wenyou-card').remove();
         });
     }
@@ -186,7 +219,7 @@ ${template}
         if (loading) {
             btn.prop('disabled', true);
             btn.find('i').addClass('wenyou-spin');
-            btn.append(' <span class="loading-text">...生成中</span>');
+            btn.append('<span class="loading-text" style="margin-left:5px;">...</span>');
         } else {
             btn.prop('disabled', false);
             btn.find('i').removeClass('wenyou-spin');
@@ -194,7 +227,7 @@ ${template}
         }
     }
 
-    // --- 插件初始化 ---
+    // --- 插件UI初始化 ---
     function setupSettings() {
         if ($('#wenyou-settings-wrapper').length) return;
 
@@ -211,7 +244,6 @@ ${template}
                             <div class="wenyou-tab" data-tab="settings">设置</div>
                         </div>
 
-                        <!-- 生成面板 -->
                         <div id="wenyou-tab-generate" class="wenyou-section active">
                             <div class="wenyou-input-group">
                                 <label>意图引导 (可选)</label>
@@ -229,11 +261,9 @@ ${template}
                                 </button>
                             </div>
                             <div id="wenyou-results" class="wenyou-results">
-                                <!-- 结果卡片将插入此处 -->
-                            </div>
+                                </div>
                         </div>
 
-                        <!-- 设置面板 -->
                         <div id="wenyou-tab-settings" class="wenyou-section">
                             <div class="wenyou-input-group">
                                 <label>Gemini API Key</label>
@@ -255,8 +285,8 @@ ${template}
         `;
         $('#extensions_settings').append(html);
 
-        // 事件绑定
-        $('.wenyou-tab').on('click', function() {
+        // 绑定事件之前先解绑，防止热重载时重复触发
+        $('.wenyou-tab').off('click').on('click', function() {
             const tab = $(this).data('tab');
             $('.wenyou-tab').removeClass('active');
             $(this).addClass('active');
@@ -264,22 +294,22 @@ ${template}
             $(`#wenyou-tab-${tab}`).addClass('active');
         });
 
-        $('.wenyou-btn[data-mode]').on('click', function() {
+        $('.wenyou-btn[data-mode]').off('click').on('click', function() {
             const mode = $(this).data('mode');
             handleGenerate(mode);
         });
 
-        $('#wenyou-save-settings').on('click', function() {
+        $('#wenyou-save-settings').off('click').on('click', function() {
             settings.apiKey = $('#wenyou-api-key').val();
             settings.model = $('#wenyou-model').val();
             saveSettings();
-            toastr.success('设置已保存');
+            toastr.success('文游系统设置已保存');
         });
 
         // 处理酒馆自带的折叠逻辑
-        $('#wenyou-settings-wrapper .inline-drawer-header').on('click', function() {
+        $('#wenyou-settings-wrapper .inline-drawer-header').off('click').on('click', function() {
             const drawer = $(this).closest('.inline-drawer');
-            drawer.toggleClass('inline-drawer-active');
+            drawer.toggleClass('inline-drawer-toggle inline-drawer-hidden');
             const icon = $(this).find('.inline-drawer-icon');
             icon.toggleClass('fa-circle-chevron-down fa-circle-chevron-up');
         });
@@ -289,9 +319,9 @@ ${template}
         $('#wenyou-model').val(settings.model);
     }
 
+    // 确保在酒馆 DOM 加载完成后运行
     $(document).ready(() => {
-        loadSettings();
         setupSettings();
-        console.log('文游系统 (Wenyou) 已加载至扩展设置');
+        console.log('文游系统 (Wenyou) 修复版已加载');
     });
 })();
