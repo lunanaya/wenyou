@@ -1,44 +1,12 @@
 {
   "name": "wenyou-system",
+  "version": "2.0.0",
+  "description": "文游系统 (Wenyou) - SillyTavern Extension",
   "private": true,
-  "version": "1.2.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "tsc --noEmit",
-    "preview": "vite preview"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build needed for pure JS extension\""
   },
-  "dependencies": {
-    "@google/genai": "^0.21.0",
-    "@radix-ui/react-label": "^2.1.0",
-    "@radix-ui/react-scroll-area": "^1.2.0",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-switch": "^1.1.1",
-    "@radix-ui/react-tabs": "^1.1.1",
-    "class-variance-authority": "^0.7.0",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.454.0",
-    "motion": "^11.11.11",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7"
-  },
-  "devDependencies": {
-    "@tailwindcss/vite": "^4.0.0-alpha.25",
-    "@types/node": "^22.8.6",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^4.0.0-alpha.25",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10"
-  },
-  "sillytavern": {
-    "display_name": "文游系统",
-    "entry_point": "index.js"
-  }
+  "author": "AI Studio",
+  "license": "MIT"
 }

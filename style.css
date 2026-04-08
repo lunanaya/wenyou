@@ -1,39 +1,219 @@
-/**
- * Wenyou System - Embedded Integration Styles
- */
-
-/* 扩展设置中的折叠面板样式 */
-.inline-drawer {
-    border-bottom: 1px solid var(--borderColor);
-    margin-bottom: 5px;
+/* 文游系统 (Wenyou) 样式表 */
+#wenyou-modal-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
 }
 
-.inline-drawer-header {
+#wenyou-modal {
+    background: var(--mainColor);
+    color: var(--fontColor);
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    border: 1px solid var(--borderColor);
+    overflow: hidden;
+}
+
+.wenyou-header {
+    padding: 15px 20px;
+    background: var(--navColor);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
+    border-bottom: 1px solid var(--borderColor);
+}
+
+.wenyou-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wenyou-close {
     cursor: pointer;
-    background: rgba(0,0,0,0.1);
+    opacity: 0.7;
+    transition: 0.2s;
 }
 
-.inline-drawer-header:hover {
-    background: rgba(0,0,0,0.2);
+.wenyou-close:hover {
+    opacity: 1;
+    color: var(--redColor);
 }
 
-.inline-drawer-content {
+.wenyou-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.wenyou-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--borderColor);
+    padding-bottom: 10px;
+}
+
+.wenyou-tab {
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9em;
+    transition: 0.2s;
+}
+
+.wenyou-tab.active {
+    background: var(--blueColor);
+    color: white;
+}
+
+.wenyou-tab:not(.active):hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.wenyou-section {
     display: none;
-    padding: 0; /* 移除内边距以让内容填满 */
-    background: rgba(0,0,0,0.05);
 }
 
-.inline-drawer-active .inline-drawer-content {
+.wenyou-section.active {
     display: block;
 }
 
-#wenyou-embedded-iframe {
+.wenyou-input-group {
+    margin-bottom: 15px;
+}
+
+.wenyou-input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.85em;
+    opacity: 0.8;
+}
+
+.wenyou-input-group input, 
+.wenyou-input-group textarea,
+.wenyou-input-group select {
     width: 100%;
-    height: 700px; /* 设置足够的高度以显示文游系统 */
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--borderColor);
+    color: var(--fontColor);
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.wenyou-btn-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.wenyou-btn {
+    padding: 10px;
     border: none;
-    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: 0.2s;
+    background: var(--navColor);
+    color: var(--fontColor);
+    border: 1px solid var(--borderColor);
+}
+
+.wenyou-btn:hover {
+    background: var(--blueColor);
+    color: white;
+}
+
+.wenyou-btn.primary {
+    background: var(--blueColor);
+    color: white;
+}
+
+.wenyou-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.wenyou-results {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wenyou-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--borderColor);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.wenyou-card-header {
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+}
+
+.wenyou-card-content {
+    padding: 15px;
+    display: none;
+    border-top: 1px solid var(--borderColor);
+    font-size: 0.9em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.wenyou-card.active .wenyou-card-content {
+    display: block;
+}
+
+.wenyou-card-actions {
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.wenyou-badge {
+    font-size: 0.7em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.wenyou-badge-user { background: #3b82f6; }
+.wenyou-badge-side { background: #10b981; }
+.wenyou-badge-main { background: #8b5cf6; }
+
+/* 动画 */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.wenyou-spin {
+    animation: spin 1s linear infinite;
 }
