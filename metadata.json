@@ -1,5 +1,5 @@
 {
-  "name": "Tavern Story Weaver",
-  "description": "A text-based adventure companion that generates dynamic story options based on context, with configurable API endpoints for different narrative modes.",
+  "name": "wenyou",
+  "description": "AI Story Weaver (Wenyou) - 一个强大的故事织梦工具，专为身份驱动的逻辑生成而优化。",
   "requestFramePermissions": []
 }
